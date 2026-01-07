@@ -61,7 +61,18 @@ def create_accounts():
 # LIST ALL ACCOUNTS
 ######################################################################
 
-# ... place you code here to LIST accounts ...
+@app.route("/accounts", methods=["GET"])
+def list_accounts():
+    """
+    Lists all Accounts
+    This endpoint will return all Accounts
+    """
+    app.logger.info("Request to list all Accounts")
+
+    accounts = Account.all()
+    results = [account.serialize() for account in accounts]
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
@@ -85,15 +96,45 @@ def get_accounts(account_id):
 # UPDATE AN EXISTING ACCOUNT
 ######################################################################
 
-# ... place you code here to UPDATE an account ...
+@app.route("/accounts/<int:account_id>", methods=["PUT"])
+def update_accounts(account_id):
+    """
+    Updates an Account
+    This endpoint will update an Account based the account_id that is requested
+    """
+    app.logger.info("Request to update an Account with id: %s", account_id)
+    check_content_type("application/json")
 
+    account = Account.find(account_id)
+    if not account:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Account with id [{account_id}] could not be found.",
+        )
+
+    account.deserialize(request.get_json())
+    account.id = account_id  # ensure the ID is not overwritten
+    account.update()
+
+    return account.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # DELETE AN ACCOUNT
 ######################################################################
 
-# ... place you code here to DELETE an account ...
+@app.route("/accounts/<int:account_id>", methods=["DELETE"])
+def delete_accounts(account_id):
+    """
+    Deletes an Account
+    This endpoint will delete an Account based the account_id that is requested
+    """
+    app.logger.info("Request to delete an Account with id: %s", account_id)
 
+    account = Account.find(account_id)
+    if account:
+        account.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
